@@ -18,10 +18,10 @@ struct GameData {
     char board[3][3];
 };
 
-void printBoard(struct GameData state);
-struct GameData enterChoice(int choice, struct GameData state);
-bool hasWinner(int choice, struct GameData state);
-bool rowsMatch(struct GameData state, int cells[8][3][2]);
+void printBoard(const struct GameData *state);
+void enterChoice(int choice, struct GameData *state);
+bool hasWinner(int choice, const struct GameData *state);
+bool rowsMatch(int cells[8][3][2], const struct GameData *state);
 
 int main() {
     struct GameData state;
@@ -46,7 +46,7 @@ int main() {
 
     while (true) {
         OS_Windows == 1 ? system("cls") : system("clear");
-        printBoard(state);
+        printBoard(&state);
         state.invalidMove = false;
 
         if (state.gameOver) {
@@ -54,41 +54,41 @@ int main() {
         }
 
         scanf("%i", &state.choice);
-        state = enterChoice(state.choice, state);
+        enterChoice(state.choice, &state);
     }
 }
 
-void printBoard(struct GameData state) {
+void printBoard(const struct GameData *state) {
     printf("      Tic Tac Toe\n\n");
     printf("Player 1 (X) - Player 2 (O)\n\n");
 
     printf("   |   |   \n");
-    printf(" %c | %c | %c \n", state.board[0][0], state.board[0][1], state.board[0][2]);
+    printf(" %c | %c | %c \n", state->board[0][0], state->board[0][1], state->board[0][2]);
     printf("___|___|___\n");
     printf("   |   |   \n");
-    printf(" %c | %c | %c \n", state.board[1][0], state.board[1][1], state.board[1][2]);
+    printf(" %c | %c | %c \n", state->board[1][0], state->board[1][1], state->board[1][2]);
     printf("___|___|___\n");
     printf("   |   |   \n");
-    printf(" %c | %c | %c \n", state.board[2][0], state.board[2][1], state.board[2][2]);
+    printf(" %c | %c | %c \n", state->board[2][0], state->board[2][1], state->board[2][2]);
     printf("   |   |   \n\n");
 
-    if (state.invalidMove) {
+    if (state->invalidMove) {
         printf("Invalid move. Try again\n");
     }
 
-    if (state.gameOver && state.winner == 0) {
+    if (state->gameOver && state->winner == 0) {
         printf("Game Over - No Winner.\n");
-    } else if (state.winner == 0) {
-        printf("Player %i: ", state.turn);
+    } else if (state->winner == 0) {
+        printf("Player %i: ", state->turn);
     } else {
-        printf("Player %i wins!\n", state.winner);
+        printf("Player %i wins!\n", state->winner);
     }
 }
 
-struct GameData enterChoice(int choice, struct GameData state) {
+void enterChoice(int choice, struct GameData *state) {
     if (choice < 1 || choice > 9) {
-        state.invalidMove = true;
-        return state;
+        state->invalidMove = true;
+        return;
     }
 
     int row = 0;
@@ -101,26 +101,25 @@ struct GameData enterChoice(int choice, struct GameData state) {
         column = choice - 7;
     }
 
-    if (state.board[row][column] == 'X' || state.board[row][column] == 'O') {
-        state.invalidMove = true;
-        return state;
+    if (state->board[row][column] == 'X' || state->board[row][column] == 'O') {
+        state->invalidMove = true;
+        return;
     }
 
-    char marker = state.turn == 1 ? 'X' : 'O';
-    state.board[row][column] = marker;
-    state.totalMarked++;
-    state.gameOver = state.totalMarked == 9;
+    char marker = state->turn == 1 ? 'X' : 'O';
+    state->board[row][column] = marker;
+    state->totalMarked++;
+    state->gameOver = state->totalMarked == 9;
 
     if (hasWinner(choice, state)) {
-        state.winner = state.turn;
-    } else if (state.gameOver == false) {
-        state.turn = state.turn == 1 ? 2 : 1;
+        state->winner = state->turn;
+        state->gameOver = true;
+    } else if (state->gameOver == false) {
+        state->turn = state->turn == 1 ? 2 : 1;
     }
-
-    return state;
 }
 
-bool hasWinner(int choice, struct GameData state) {
+bool hasWinner(int choice, const struct GameData *state) {
     int cells[8][3][2] = {
         {{ 0, 0 }, { 0, 1 }, { 0, 2 }},
         {{ 1, 0 }, { 1, 1 }, { 1, 2 }},
@@ -132,13 +131,13 @@ bool hasWinner(int choice, struct GameData state) {
         {{ 0, 2 }, { 1, 1 }, { 2, 0 }},
     };
 
-    return rowsMatch(state, cells);
+    return rowsMatch(cells, state);
 }
 
-bool rowsMatch(struct GameData state, int cells[8][3][2]) {
+bool rowsMatch(int cells[8][3][2], const struct GameData *state) {
     for (int i = 0; i < 8; i++) {
-        if (state.board[cells[i][0][0]][cells[i][0][1]] == state.board[cells[i][1][0]][cells[i][1][1]] &&
-            state.board[cells[i][0][0]][cells[i][0][1]] == state.board[cells[i][2][0]][cells[i][2][1]]) {
+        if (state->board[cells[i][0][0]][cells[i][0][1]] == state->board[cells[i][1][0]][cells[i][1][1]] &&
+            state->board[cells[i][0][0]][cells[i][0][1]] == state->board[cells[i][2][0]][cells[i][2][1]]) {
             return true;
         }
     }
